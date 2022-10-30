@@ -1,15 +1,8 @@
-import json
+from enum import Flag
+import json, jsonschema
 from http.server import HTTPServer, BaseHTTPRequestHandler
 
 USERS_LIST = [
-    {
-        "id": 1,
-        "username": "theUser",
-        "firstName": "John",
-        "lastName": "James",
-        "email": "john@email.com",
-        "password": "12345",
-    }
 ]
 
 
@@ -46,8 +39,18 @@ class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
             self._set_response(status_code=400, body={"error": "User not found"})
 
     def do_POST(self):
-        self._set_response(418)
-
+        global USERS_LIST
+        if '/user/' in self.path:
+            data = self._pars_body()
+            if not self.validateJSON(data=data):
+                self._set_response(status_code=400, body={})
+                return
+            for element in USERS_LIST:
+                if element['id'] == data['id']:
+                    self._set_response(status_code=400, body={})
+            USERS_LIST.append(data)
+            self._set_response(status_code=201, body=USERS_LIST)
+            
     def do_PUT(self):
         self._set_response(418)
 
@@ -58,6 +61,25 @@ class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
                     self._set_response(status_code=200, body={})
                     return
             self._set_response(status_code=404, body={"error": "User not found"})
+
+    def validateJSON(self, data):
+        schema = {
+        "type": "object",
+        "properties": {
+            "id": {"type": "integer"},
+            "username": {"type": "string"},
+            "firstName": {"type": "string"},
+            "lastName": {"type": "string"},
+            "email": {"type": "string"},
+            "password": {"type": "string"}
+        },
+        "required": ["name", "username", "firstName", "lastName", "email", "password"],
+                }
+        try:
+            jsonschema.validate(data, schema=schema)
+            return True
+        except:
+            return False
 
 
 def run(server_class=HTTPServer, handler_class=SimpleHTTPRequestHandler, host='localhost', port=8000):
