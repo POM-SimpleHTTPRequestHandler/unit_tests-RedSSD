@@ -26,7 +26,25 @@ class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
         return json.loads(self.rfile.read(content_length).decode('utf-8'))  # <--- Gets the data itself
 
     def do_GET(self):
-        self._set_response(418)
+        global USERS_LIST
+        if self.path == '/reset':
+            USERS_LIST = [   {
+                        "id": 1,
+                        "username": "theUser",
+                        "firstName": "John",
+                        "lastName": "James",
+                        "email": "john@email.com",
+                        "password": "12345",}]
+            self._set_response(status_code=200, body=USERS_LIST)
+        elif self.path == '/users':
+            self._set_response(status_code=200, body=USERS_LIST)
+        elif '/user/' in self.path:
+            for element in USERS_LIST:
+                if self.path[6:] == element['username']:
+                    self._set_response(status_code=200, body=element)
+                    return
+            self._set_response(status_code=400, body={"error": "User not found"})
+
 
     def do_POST(self):
         self._set_response(418)
