@@ -45,7 +45,6 @@ class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
                     return
             self._set_response(status_code=400, body={"error": "User not found"})
 
-
     def do_POST(self):
         self._set_response(418)
 
@@ -53,7 +52,12 @@ class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
         self._set_response(418)
 
     def do_DELETE(self):
-        self._set_response(418)
+        if '/user/' in self.path:
+            for element in USERS_LIST:
+                if int(self.path[6:]) == element['id']:
+                    self._set_response(status_code=200, body={})
+                    return
+            self._set_response(status_code=404, body={"error": "User not found"})
 
 
 def run(server_class=HTTPServer, handler_class=SimpleHTTPRequestHandler, host='localhost', port=8000):
